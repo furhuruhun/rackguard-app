@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "RackGuard",
+    "slug": "rackguard-app",
+    "version": "1.0.0",
+    "scheme": "rackguard",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1A1F2E"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.rackguard.app"
+    },
+    "android": {
+      "package": "com.rackguard.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#1A1F2E"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
