@@ -66,7 +66,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!firebaseUser && !onLogin) {
       router.replace('/login')
     } else if (firebaseUser && onLogin) {
-      router.replace('/(tabs)/')
+      router.replace('/(tabs)')
     }
   }, [firebaseUser, initialized, segments]) // eslint-disable-line react-hooks/exhaustive-deps
 

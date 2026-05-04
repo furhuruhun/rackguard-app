@@ -8,6 +8,7 @@
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#1A1F2E"
     },
@@ -18,6 +19,7 @@
     "android": {
       "package": "com.rackguard.app",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1A1F2E"
       }
     },
