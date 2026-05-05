@@ -1,12 +1,12 @@
 import { Tabs } from 'expo-router'
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native'
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
-import { Home, BookOpen, ScanLine, Clock, User } from 'lucide-react-native'
+import { Home, BookOpen, QrCode, Clock, User } from 'lucide-react-native'
 
 const TAB_CONFIG = [
   { name: 'index',   label: 'Beranda', Icon: Home },
   { name: 'catalog', label: 'Katalog', Icon: BookOpen },
-  { name: 'scan',    label: 'Scan',    Icon: ScanLine, center: true },
+  { name: 'payment', label: 'Bayar',   Icon: QrCode, center: true },
   { name: 'history', label: 'Riwayat', Icon: Clock },
   { name: 'profile', label: 'Profil',  Icon: User },
 ]
@@ -39,7 +39,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               activeOpacity={0.85}
             >
               <View style={[styles.centerBtn, isFocused && styles.centerBtnActive]}>
-                <ScanLine color="#fff" size={26} />
+                <QrCode color="#fff" size={26} />
               </View>
               <Text style={[styles.centerLabel, isFocused && { color: '#3B82F6' }]}>
                 Scan
@@ -72,9 +72,10 @@ export default function TabLayout() {
     <Tabs tabBar={(props) => <CustomTabBar {...props} />}>
       <Tabs.Screen name="index"   options={{ title: 'Beranda' }} />
       <Tabs.Screen name="catalog" options={{ title: 'Katalog' }} />
-      <Tabs.Screen name="scan"    options={{ title: 'Scan' }} />
+      <Tabs.Screen name="payment" options={{ title: 'Bayar / Aksi' }} />
       <Tabs.Screen name="history" options={{ title: 'Riwayat' }} />
       <Tabs.Screen name="profile" options={{ title: 'Profil' }} />
+      <Tabs.Screen name="scan"    options={{ href: null }} />
     </Tabs>
   )
 }
