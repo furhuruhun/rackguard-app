@@ -63,6 +63,9 @@ export function translateFirebaseError(code: string): string {
     'auth/invalid-credential': 'Email atau password salah.',
     'auth/too-many-requests': 'Terlalu banyak percobaan. Coba lagi nanti.',
     'auth/network-request-failed': 'Koneksi gagal. Periksa internet Anda.',
+    'auth/email-already-in-use': 'Email sudah terdaftar. Silakan masuk.',
+    'auth/weak-password': 'Password terlalu lemah. Minimal 6 karakter.',
+    'auth/operation-not-allowed': 'Pendaftaran email tidak diizinkan.',
   }
   return map[code] ?? 'Terjadi kesalahan. Silakan coba lagi.'
 }

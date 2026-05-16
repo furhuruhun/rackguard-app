@@ -3,61 +3,65 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native'
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { ref, set } from 'firebase/database'
 import { useRouter } from 'expo-router'
-import { auth } from '@/lib/firebase'
-import { translateFirebaseError } from '@/lib/utils'
+import { auth, database } from '@/lib/firebase'
+import { getInitials, translateFirebaseError } from '@/lib/utils'
 import { BookOpen, Eye, EyeOff } from 'lucide-react-native'
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const router = useRouter()
+  const [nickname, setNickname] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPw, setShowPw] = useState(false)
+  const [showConfirmPw, setShowConfirmPw] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [resetLoading, setResetLoading] = useState(false)
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     setError('')
+
+    if (!nickname.trim()) { setError('Nama panggilan wajib diisi.'); return }
+    if (nickname.trim().length < 2) { setError('Nama panggilan minimal 2 karakter.'); return }
     if (!email.trim()) { setError('Email wajib diisi.'); return }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Format email tidak valid.'); return }
+    if (!email.trim().endsWith('@std.stei.itb.ac.id')) {
+      setError('Gunakan email institusi dengan domain @std.stei.itb.ac.id.')
+      return
+    }
     if (!password) { setError('Password wajib diisi.'); return }
+    if (password.length < 6) { setError('Password minimal 6 karakter.'); return }
+    if (password !== confirmPassword) { setError('Konfirmasi password tidak cocok.'); return }
 
     setLoading(true)
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password)
-    } catch (err: unknown) {
-      const code = (err as { code?: string }).code ?? ''
-      setError(translateFirebaseError(code))
-    } finally {
-      setLoading(false)
-    }
-  }
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password)
+      const uid = userCredential.user.uid
+      const today = new Date().toISOString().split('T')[0]
 
-  const handleForgotPassword = async () => {
-    setError('')
-    if (!email.trim()) {
-      setError('Masukkan email Anda di atas terlebih dahulu.')
-      return
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Format email tidak valid.')
-      return
-    }
-    setResetLoading(true)
-    try {
-      await sendPasswordResetEmail(auth, email.trim())
+      await set(ref(database, `users/${uid}`), {
+        name: nickname.trim(),
+        email: email.trim(),
+        avatar: getInitials(nickname.trim()),
+        currentBorrowed: 0,
+        memberSince: today,
+        status: 'active',
+        totalBorrowed: 0,
+        totalFines: 0,
+      })
+
       Alert.alert(
-        'Email Terkirim',
-        `Link reset password telah dikirim ke ${email.trim()}. Periksa kotak masuk Anda.`,
+        'Pendaftaran Berhasil',
+        `Selamat datang, ${nickname.trim()}! Akun Anda telah dibuat.`,
         [{ text: 'OK' }]
       )
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? ''
       setError(translateFirebaseError(code))
     } finally {
-      setResetLoading(false)
+      setLoading(false)
     }
   }
 
@@ -77,12 +81,12 @@ export default function LoginScreen() {
           </View>
           <Text style={styles.brand}>RackGuard</Text>
           <Text style={styles.brandSub}>PEMINJAM APP</Text>
-          <Text style={styles.tagline}>Sistem peminjaman buku pintar.</Text>
+          <Text style={styles.tagline}>Buat akun baru untuk mulai meminjam.</Text>
         </View>
 
         {/* Form card */}
         <View style={styles.card}>
-          <Text style={styles.title}>Masuk</Text>
+          <Text style={styles.title}>Daftar</Text>
 
           {!!error && (
             <View style={styles.errorBox}>
@@ -90,12 +94,24 @@ export default function LoginScreen() {
             </View>
           )}
 
-          <Text style={styles.label}>Email Institusi</Text>
+          <Text style={styles.label}>Nama Panggilan</Text>
+          <TextInput
+            style={styles.input}
+            value={nickname}
+            onChangeText={setNickname}
+            placeholder="contoh: Farhan"
+            placeholderTextColor="#9ca3af"
+            autoCapitalize="words"
+            autoComplete="name"
+            editable={!loading}
+          />
+
+          <Text style={[styles.label, { marginTop: 14 }]}>Email Institusi</Text>
           <TextInput
             style={styles.input}
             value={email}
             onChangeText={setEmail}
-            placeholder="nama@student.itb.ac.id"
+            placeholder="nama@std.stei.itb.ac.id"
             placeholderTextColor="#9ca3af"
             autoCapitalize="none"
             keyboardType="email-address"
@@ -109,7 +125,7 @@ export default function LoginScreen() {
               style={[styles.input, { flex: 1, marginBottom: 0 }]}
               value={password}
               onChangeText={setPassword}
-              placeholder="••••••••"
+              placeholder="Min. 6 karakter"
               placeholderTextColor="#9ca3af"
               secureTextEntry={!showPw}
               editable={!loading}
@@ -122,32 +138,40 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={styles.forgotBtn}
-            onPress={handleForgotPassword}
-            disabled={resetLoading || loading}
-          >
-            {resetLoading
-              ? <ActivityIndicator color="#6366f1" size="small" />
-              : <Text style={styles.forgotText}>Lupa Password?</Text>
-            }
-          </TouchableOpacity>
+          <Text style={[styles.label, { marginTop: 14 }]}>Konfirmasi Password</Text>
+          <View style={styles.pwWrap}>
+            <TextInput
+              style={[styles.input, { flex: 1, marginBottom: 0 }]}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Ulangi password"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry={!showConfirmPw}
+              editable={!loading}
+            />
+            <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowConfirmPw((v) => !v)}>
+              {showConfirmPw
+                ? <EyeOff color="#9ca3af" size={18} />
+                : <Eye color="#9ca3af" size={18} />
+              }
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
-            style={[styles.loginBtn, loading && { opacity: 0.7 }]}
-            onPress={handleLogin}
+            style={[styles.registerBtn, loading && { opacity: 0.7 }]}
+            onPress={handleRegister}
             disabled={loading}
           >
             {loading
               ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.loginBtnText}>Masuk</Text>
+              : <Text style={styles.registerBtnText}>Daftar</Text>
             }
           </TouchableOpacity>
 
-          <View style={styles.registerRow}>
-            <Text style={styles.registerHint}>Belum punya akun? </Text>
-            <TouchableOpacity onPress={() => router.push('/register')} disabled={loading}>
-              <Text style={styles.registerLink}>Daftar</Text>
+          <View style={styles.loginRow}>
+            <Text style={styles.loginHint}>Sudah punya akun? </Text>
+            <TouchableOpacity onPress={() => router.replace('/login')} disabled={loading}>
+              <Text style={styles.loginLink}>Masuk</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -166,8 +190,8 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 80,
-    paddingBottom: 40,
+    paddingTop: 64,
+    paddingBottom: 32,
     paddingHorizontal: 24,
   },
   logoWrap: {
@@ -255,39 +279,28 @@ const styles = StyleSheet.create({
   eyeBtn: {
     padding: 10,
   },
-  forgotBtn: {
-    alignSelf: 'flex-end',
-    marginTop: 10,
-    marginBottom: 2,
-    padding: 4,
-  },
-  forgotText: {
-    color: '#6366f1',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  loginBtn: {
+  registerBtn: {
     backgroundColor: '#1A1F2E',
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 22,
   },
-  loginBtnText: {
+  registerBtnText: {
     color: '#fff',
     fontWeight: '700',
     fontSize: 15,
   },
-  registerRow: {
+  loginRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 16,
   },
-  registerHint: {
+  loginHint: {
     fontSize: 13,
     color: '#6b7280',
   },
-  registerLink: {
+  loginLink: {
     fontSize: 13,
     fontWeight: '700',
     color: '#1A1F2E',

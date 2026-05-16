@@ -14,8 +14,8 @@ const TAB_CONFIG = [
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   return (
     <View style={styles.tabBar}>
-      {state.routes.map((route, index) => {
-        const isFocused = state.index === index
+      {state.routes.filter((route) => route.name !== 'scan').map((route, index) => {
+        const isFocused = state.routes[state.index]?.key === route.key
         const cfg = TAB_CONFIG[index]
         const isCenter = cfg?.center === true
 

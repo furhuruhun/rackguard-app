@@ -35,6 +35,7 @@ export interface Transaction {
   returnDate: string | null
   fine: number
   status: 'active' | 'completed' | 'overdue'
+  paymentStatus?: 'pending' | 'success'
 }
 
 export interface Shelf {

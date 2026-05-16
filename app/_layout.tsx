@@ -7,8 +7,11 @@ import { auth, database } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
 import { Member } from '@/types'
 import { ActivityIndicator, View } from 'react-native'
+import { useFonts } from 'expo-font'
+import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display'
+import { SpecialElite_400Regular } from '@expo-google-fonts/special-elite'
 
-function AuthGuard({ children }: { children: React.ReactNode }) {
+function AuthGuard({ children, fontsLoaded }: { children: React.ReactNode; fontsLoaded: boolean | null }) {
   const router = useRouter()
   const segments = useSegments()
   const { firebaseUser, initialized, setFirebaseUser, setMember, setInitialized } = useAuthStore()
@@ -60,17 +63,17 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!initialized) return
-    const inTabs = segments[0] === '(tabs)'
-    const onLogin = segments[0] === 'login'
+    const seg0 = segments[0] as string
+    const onAuthPage = seg0 === 'login' || seg0 === 'register'
 
-    if (!firebaseUser && !onLogin) {
+    if (!firebaseUser && !onAuthPage) {
       router.replace('/login')
-    } else if (firebaseUser && onLogin) {
+    } else if (firebaseUser && onAuthPage) {
       router.replace('/(tabs)')
     }
   }, [firebaseUser, initialized, segments]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!initialized) {
+  if (!initialized || !fontsLoaded) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1A1F2E' }}>
         <ActivityIndicator color="#3B82F6" size="large" />
@@ -82,12 +85,17 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({ PlayfairDisplay_700Bold, SpecialElite_400Regular })
+
   return (
-    <AuthGuard>
+    <AuthGuard fontsLoaded={fontsLoaded}>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="duration" />
+        <Stack.Screen name="receipt" />
         <Stack.Screen
           name="book/[id]"
           options={{

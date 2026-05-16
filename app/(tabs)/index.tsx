@@ -65,7 +65,9 @@ export default function HomeScreen() {
     return () => unsubs.forEach((u) => u())
   }, [memberId])
 
-  const activeTransactions = transactions.filter((t) => t.status === 'active')
+  const activeTransactions = transactions.filter(
+    (t) => t.status === 'active' && t.paymentStatus !== 'pending'
+  )
   const overdueTransactions = transactions.filter((t) => t.status === 'overdue')
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -78,8 +80,8 @@ export default function HomeScreen() {
     overdueTransactions.reduce((s, t) => s + (t.fine ?? 0), 0)
 
   const activeBooksInTransactions = activeTransactions
-    .map((t) => books.find((b) => b.id === t.bookId))
-    .filter(Boolean) as Book[]
+    .map((tx) => ({ tx, book: books.find((b) => b.id === tx.bookId) }))
+    .filter((pair): pair is { tx: Transaction; book: Book } => pair.book !== undefined)
 
   const filteredBooks = books.filter((b) => {
     const q = search.toLowerCase()
@@ -107,7 +109,7 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>Selamat Datang,</Text>
             <Text style={styles.name}>{member?.name ?? 'Pengguna'}</Text>
           </View>
-          <TouchableOpacity style={styles.notifBtn} onPress={() => {}}>
+          <TouchableOpacity style={styles.notifBtn} onPress={() => router.push('/(tabs)/profile')}>
             <Bell color="#374151" size={22} />
             {unreadCount > 0 && (
               <View style={styles.badge}>
@@ -172,12 +174,11 @@ export default function HomeScreen() {
         {activeBooksInTransactions.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Sedang Dibaca</Text>
-            {activeBooksInTransactions.map((book) => {
-              const tx = activeTransactions.find((t) => t.bookId === book.id)!
+            {activeBooksInTransactions.map(({ tx, book }) => {
               const days = daysUntil(tx.dueDate)
               return (
                 <TouchableOpacity
-                  key={book.id}
+                  key={tx.id}
                   style={styles.readingItem}
                   onPress={() => router.push(`/book/${book.id}`)}
                 >

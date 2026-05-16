@@ -8,7 +8,7 @@ import { database } from '@/lib/firebase'
 import { useAuthStore } from '@/store/authStore'
 import { Book } from '@/types'
 import StatusBadge from '@/components/StatusBadge'
-import { BookOpen, MapPin, Tag, Hash, ScanLine } from 'lucide-react-native'
+import { BookOpen, MapPin, Tag, Hash, CreditCard } from 'lucide-react-native'
 
 export default function BookDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -115,10 +115,12 @@ export default function BookDetailScreen() {
           <TouchableOpacity
             style={[styles.borrowBtn, !canBorrow && styles.borrowBtnDisabled]}
             disabled={!canBorrow}
-            onPress={() => router.push('/(tabs)/scan')}
+            onPress={() =>
+              router.push({ pathname: '/duration', params: { bookId: book.id } })
+            }
             activeOpacity={0.85}
           >
-            <ScanLine color="#fff" size={20} />
+            <CreditCard color="#fff" size={20} />
             <Text style={styles.borrowBtnText}>
               {canBorrow ? 'Pinjam Sekarang' : 'Tidak Dapat Meminjam'}
             </Text>
