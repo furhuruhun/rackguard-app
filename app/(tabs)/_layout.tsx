@@ -1,5 +1,7 @@
 import { Tabs } from 'expo-router'
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { Home, BookOpen, QrCode, Clock, User } from 'lucide-react-native'
 
@@ -12,8 +14,9 @@ const TAB_CONFIG = [
 ]
 
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const { bottom } = useSafeAreaInsets()
   return (
-    <View style={styles.tabBar}>
+    <View style={[styles.tabBar, { paddingBottom: bottom + 8 }]}>
       {state.routes.filter((route) => route.name !== 'scan').map((route, index) => {
         const isFocused = state.routes[state.index]?.key === route.key
         const cfg = TAB_CONFIG[index]
@@ -58,6 +61,16 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             style={styles.tabItem}
             activeOpacity={0.7}
           >
+            {isFocused && (
+              <LinearGradient
+                colors={['rgba(59,130,246,0.13)', 'transparent']}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 0.5 }}
+                style={StyleSheet.absoluteFillObject}
+                pointerEvents="none"
+              />
+            )}
+            {isFocused && <View style={styles.indicator} pointerEvents="none" />}
             <Icon color={color} size={22} />
             <Text style={[styles.tabLabel, { color }]}>{cfg?.label}</Text>
           </TouchableOpacity>
@@ -86,8 +99,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#f3f4f6',
-    paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-    paddingTop: 8,
+    paddingBottom: 0,
+    paddingTop: 0,
     paddingHorizontal: 4,
     alignItems: 'flex-end',
     shadowColor: '#000',
@@ -99,7 +112,20 @@ const styles = StyleSheet.create({
   tabItem: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    alignSelf: 'stretch',
     gap: 3,
+    overflow: 'hidden',
+  },
+  indicator: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: '#3B82F6',
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
   },
   tabLabel: {
     fontSize: 10,
